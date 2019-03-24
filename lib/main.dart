@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:popular_movies_flutter/data/client.dart';
 import 'package:popular_movies_flutter/data/entity/movie/movie.dart';
-import 'package:popular_movies_flutter/secrets.dart' as secrets;
+import 'package:popular_movies_flutter/discover/discover_bloc.dart';
 
 void main() => runApp(MyApp());
 
@@ -19,38 +18,28 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  final Client client = Client(secrets.API_KEY);
-
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<Movie> _movies = [];
+  DiscoverBloc _bloc = DiscoverBloc();
 
   @override
   void initState() {
     super.initState();
-    discoverMovies();
+    _bloc.discoverMovies();
   }
 
-  void discoverMovies() async {
-    print("discoverMovies(): start");
-    var movies = await widget.client.discoverMovies();
-    setState(() {
-      _movies = movies == null ? [] : movies;
-    });
-  }
-
-  Widget _buildMovieGrid() {
+  Widget _buildMovieGrid(List<Movie> movies) {
     return GridView.builder(
-      itemCount: _movies.length,
+      itemCount: movies.length,
       gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         childAspectRatio: 0.6,
       ),
       itemBuilder: (context, i) {
-        return _buildMovieItem(_movies[i]);
+        return _buildMovieItem(movies[i]);
       },
     );
   }
@@ -63,12 +52,11 @@ class _MyHomePageState extends State<MyHomePage> {
           aspectRatio: 0.7,
           child: Container(
             decoration: BoxDecoration(
-              image: DecorationImage(
-                fit: BoxFit.fill,
-                alignment: FractionalOffset.center,
-                image: NetworkImage(movie.getPosterImageUrl()),
-              )
-            ),
+                image: DecorationImage(
+              fit: BoxFit.fill,
+              alignment: FractionalOffset.center,
+              image: NetworkImage(movie.getPosterImageUrl()),
+            )),
           ),
         ),
         Text(
@@ -86,7 +74,16 @@ class _MyHomePageState extends State<MyHomePage> {
         title: Text('Popular Movies'),
       ),
       body: Container(
-        child: _buildMovieGrid()
+        child: StreamBuilder<List<Movie>>(
+          stream: _bloc.movieSubject.stream,
+          builder: (context, AsyncSnapshot<List<Movie>> snapshot) {
+            if (snapshot.hasData) {
+              return _buildMovieGrid(snapshot.data);
+            } else {
+              return Container();
+            }
+          },
+        ),
       ),
     );
   }
