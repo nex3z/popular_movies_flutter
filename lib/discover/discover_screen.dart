@@ -19,22 +19,17 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Popular Movies'),
-      ),
-      body: StreamBuilder<List<Movie>>(
-        stream: _bloc.movieSubject.stream,
-        builder: (context, AsyncSnapshot<List<Movie>> snapshot) {
-          if (snapshot.hasData) {
-            return MovieGridWidget(
-              movies: snapshot.data,
-            );
-          } else {
-            return Container();
-          }
-        },
-      ),
+    return StreamBuilder<List<Movie>>(
+      stream: _bloc.movieSubject.stream,
+      builder: (context, AsyncSnapshot<List<Movie>> snapshot) {
+        if (snapshot.hasData) {
+          return MovieGridWidget(
+            movies: snapshot.data,
+          );
+        } else {
+          return Container();
+        }
+      },
     );
   }
 }
